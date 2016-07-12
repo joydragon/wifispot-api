@@ -1,0 +1,155 @@
+swagger: "2.0"
+info:
+  description: "Get you free Wifi passwords. Every free wifi spot will be available\
+    \ here."
+  version: "1.0.0"
+  title: "Wifi Spot API"
+# during dev, should point to your local machine
+host: "localhost:10010"
+# basePath prefixes all resource paths 
+basePath: "/v1"
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /swagger:
+    x-swagger-pipe: swagger_raw
+  /wifi:
+    get:
+      tags:
+      - "WifiSpot"
+      summary: "Get All Wifi Spots"
+      description: "El punto de wifi retorna todos los puntos de Wifi que han sido\
+        \ guardados dentro del sistema. Estos puntos de Wifi guardan los SSID y las\
+        \ claves usadas en cada unos de estos Spots. Si se especifica un SSID se filtra\
+        \ por todos los que estan guardados con ese SSID\n"
+      operationId: "wifiGET"
+      parameters:
+      - name: "ssid"
+        in: "query"
+        description: "SSID de la Wifi"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "An array of wifi spots"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/WifiSpot"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "WifiSpot"
+    post:
+      tags:
+      - "WifiSpot"
+      summary: "Add a Wifi Spot"
+      description: "Agrega un punto de Wifi a la lista que estamos buscando, necesita\
+        \ el objeto entero para poder almacenarlo correctamente\n"
+      operationId: "wifiPOST"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "nombre"
+        in: "formData"
+        description: "Wifi SSID o Nombre de Wifi, parte de la definicion de una Wifi"
+        required: true
+        type: "string"
+      - name: "password"
+        in: "formData"
+        description: "Clave Wifi, parte de la definicion de una Wifi"
+        required: true
+        type: "string"
+      - name: "descripcion"
+        in: "formData"
+        description: "Descipcion de la red, en la que sale de donde es la red"
+        required: false
+        type: "string"
+      - name: "tipo"
+        in: "formData"
+        description: "Tipo de cifrado que tiene la red, si es que no se especifica, tendremos que suponer que no se sabe, y dejarla como parte del descubrimiento"
+        required: false
+        type: "string"
+      - name: "ubicacion"
+        in: "formData"
+        description: "Localizacion de la red en el espacio, ubicacion geografica en 'latitud, longitud'"
+        required: false
+        type: "string"
+      responses:
+        200:
+          description: "Received the WifiSpot OK"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "WifiSpot"
+  /wifi/{wifi_id}:
+    get:
+      tags:
+      - "WifiSpot"
+      summary: "Get a (one) WifiSpot"
+      description: "El punto de wifi retorna un punto de Wifi que haya sido guardados\
+        \ dentro del sistema. Estos puntos de Wifi guardan los SSID y las claves usadas\
+        \ en cada uno de estos Spots. Este punto busca por Id interno\n"
+      operationId: "wifiWifi_idGET"
+      parameters:
+      - name: "wifi_id"
+        in: "path"
+        description: "SSID de la Wifi"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "One Wifi spot"
+          schema:
+            $ref: "#/definitions/WifiSpot"
+        default:
+          description: "Unexpected error"
+          schema:
+            $ref: "#/definitions/Error"
+      x-swagger-router-controller: "WifiSpot"
+definitions:
+  WifiSpot:
+    type: "object"
+    properties:
+      wifi_id:
+        type: "string"
+        description: "Identificador unico (de uso interno) de cada punto de acceso\
+          \ en la BD."
+      nombre:
+        type: "string"
+        description: "Nombre para mostrar del punto de Wifi (SSID)."
+      descripcion:
+        type: "string"
+        description: "Descripcion de que se trata esta red, por ejemplo la red de Biblioteca, Starbucks, etc."
+      password:
+        type: "string"
+        description: "Clave usada para conectarse al punto de acceso en texto plano."
+      tipo:
+        type: "string"
+        description: "Tipo de cifrado que tiene esta red (WEP, WPA, WPA2)."
+      ubicacion:
+        type: "string"
+        description: "Ubicaciones de cada uno de estos puntos de acceso (opcional)."
+    "x-swagger-mongoose":
+      "schema-options":
+        "timestamps": true
+  Error:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      message:
+        type: "string"
+      fields:
+        type: "string"
